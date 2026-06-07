@@ -132,7 +132,7 @@ export default function Footer() {
         {/* Divider */}
         <div className="border-t border-slate-800 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
           <p className="text-slate-500 text-sm">
-            © {new Date().getFullYear()} {settings?.businessName ?? 'Clean House'}. All rights reserved.
+            © {new Date().getFullYear()} {settings?.businessName ?? 'Clean House'}
           </p>
           <p className="text-slate-600 text-sm">Made with ❤️ in Calgary</p>
         </div>
