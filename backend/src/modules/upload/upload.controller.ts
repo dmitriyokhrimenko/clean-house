@@ -2,12 +2,14 @@ import {
   Controller, Post, UseInterceptors, UploadedFiles,
   BadRequestException,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
 
 @Controller('upload')
 export class UploadController {
+  @Throttle({ global: { ttl: 60000, limit: 20 } })
   @Post()
   @UseInterceptors(
     FilesInterceptor('files', 10, {
