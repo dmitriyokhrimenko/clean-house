@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Trash2, ChevronUp, ChevronDown, Upload, Pencil, Check, X, ImageOff } from 'lucide-react';
+import { Trash2, ChevronUp, ChevronDown, Upload, Pencil, Check, X, ImageOff, Home } from 'lucide-react';
 import { galleryApi, uploadApi } from '../../services/api';
 import type { GalleryImage } from '../../types';
 
@@ -155,6 +155,11 @@ export default function AdminGallery() {
                   alt={img.caption ?? 'Gallery image'}
                   className="w-full h-full object-cover"
                 />
+                {img.showOnHome && (
+                  <span className="absolute top-2 left-2 bg-primary-600 text-white text-[10px] font-semibold px-2 py-0.5 rounded-full flex items-center gap-1">
+                    <Home className="w-2.5 h-2.5" /> Home
+                  </span>
+                )}
               </div>
 
               {/* Caption + controls */}
@@ -210,14 +215,36 @@ export default function AdminGallery() {
                     </button>
                   </div>
 
-                  {/* Delete */}
-                  <button
-                    onClick={() => void handleDelete(img.id)}
-                    className="p-1 rounded text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors"
-                    title="Delete"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
+                  <div className="flex gap-1">
+                    {/* Show on home toggle */}
+                    <button
+                      onClick={async () => {
+                        try {
+                          const updated = await galleryApi.update(img.id, { showOnHome: !img.showOnHome });
+                          setImages((prev) => prev.map((i) => (i.id === img.id ? updated : i)));
+                        } catch {
+                          setError('Failed to update image.');
+                        }
+                      }}
+                      className={`p-1 rounded transition-colors ${
+                        img.showOnHome
+                          ? 'text-primary-600 bg-primary-50 hover:bg-primary-100'
+                          : 'text-slate-400 hover:text-primary-600 hover:bg-primary-50'
+                      }`}
+                      title={img.showOnHome ? 'Remove from home page' : 'Show on home page'}
+                    >
+                      <Home className="w-3.5 h-3.5" />
+                    </button>
+
+                    {/* Delete */}
+                    <button
+                      onClick={() => void handleDelete(img.id)}
+                      className="p-1 rounded text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                      title="Delete"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>

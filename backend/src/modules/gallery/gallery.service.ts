@@ -12,8 +12,11 @@ export class GalleryService {
     private readonly repo: Repository<GalleryImage>,
   ) {}
 
-  findAll(): Promise<GalleryImage[]> {
-    return this.repo.find({ order: { sortOrder: 'ASC', createdAt: 'ASC' } });
+  findAll(showOnHome?: boolean): Promise<GalleryImage[]> {
+    return this.repo.find({
+      where: showOnHome ? { showOnHome: true } : undefined,
+      order: { sortOrder: 'ASC', createdAt: 'ASC' },
+    });
   }
 
   async create(dto: { url: string; caption?: string; sortOrder?: number }): Promise<GalleryImage> {
@@ -26,10 +29,11 @@ export class GalleryService {
     return this.repo.save(image);
   }
 
-  async update(id: string, dto: { caption?: string | null; sortOrder?: number }): Promise<GalleryImage> {
+  async update(id: string, dto: { caption?: string | null; sortOrder?: number; showOnHome?: boolean }): Promise<GalleryImage> {
     const image = await this.findOne(id);
     if (dto.caption !== undefined) image.caption = dto.caption;
     if (dto.sortOrder !== undefined) image.sortOrder = dto.sortOrder;
+    if (dto.showOnHome !== undefined) image.showOnHome = dto.showOnHome;
     return this.repo.save(image);
   }
 

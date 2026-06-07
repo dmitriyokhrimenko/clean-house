@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Patch, Delete, Param, Body, UseGuards, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Param, Body, Query, UseGuards, HttpCode, HttpStatus } from '@nestjs/common';
 import { GalleryService } from './gallery.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
@@ -7,8 +7,8 @@ export class GalleryController {
   constructor(private readonly galleryService: GalleryService) {}
 
   @Get()
-  findAll() {
-    return this.galleryService.findAll();
+  findAll(@Query('home') home?: string) {
+    return this.galleryService.findAll(home === 'true');
   }
 
   @UseGuards(JwtAuthGuard)
@@ -21,7 +21,7 @@ export class GalleryController {
   @Patch(':id')
   update(
     @Param('id') id: string,
-    @Body() body: { caption?: string | null; sortOrder?: number },
+    @Body() body: { caption?: string | null; sortOrder?: number; showOnHome?: boolean },
   ) {
     return this.galleryService.update(id, body);
   }

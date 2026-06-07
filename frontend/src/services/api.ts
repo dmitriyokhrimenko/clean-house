@@ -100,10 +100,13 @@ export const statsApi = {
 };
 
 export const galleryApi = {
-  getAll: () => get<GalleryImage[]>('/gallery'),
+  getAll: (params?: { home?: boolean }) => {
+    const qs = params?.home ? '?home=true' : '';
+    return get<GalleryImage[]>(`/gallery${qs}`);
+  },
   create: (data: { url: string; caption?: string }) =>
     post<GalleryImage>('/gallery', data),
-  update: (id: string, data: { caption?: string | null; sortOrder?: number }) =>
+  update: (id: string, data: { caption?: string | null; sortOrder?: number; showOnHome?: boolean }) =>
     patch<GalleryImage>(`/gallery/${id}`, data),
   delete: (id: string) => del<void>(`/gallery/${id}`),
 };

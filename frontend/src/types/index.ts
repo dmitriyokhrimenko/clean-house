@@ -77,6 +77,7 @@ export interface GalleryImage {
   url: string;
   caption: string | null;
   sortOrder: number;
+  showOnHome: boolean;
   createdAt: string;
 }
 

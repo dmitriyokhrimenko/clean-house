@@ -13,7 +13,7 @@ export default function Home() {
       <Hero />
       <Services />
       <About />
-      <Gallery />
+      <Gallery homeOnly />
       <BookingForm />
       <Footer />
     </div>

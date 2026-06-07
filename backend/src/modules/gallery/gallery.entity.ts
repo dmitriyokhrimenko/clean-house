@@ -14,6 +14,9 @@ export class GalleryImage {
   @Column({ default: 0 })
   sortOrder: number;
 
+  @Column({ default: false })
+  showOnHome: boolean;
+
   @CreateDateColumn()
   createdAt: Date;
 }
