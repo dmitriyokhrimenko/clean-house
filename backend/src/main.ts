@@ -9,9 +9,19 @@ async function bootstrap() {
 
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
 
-  const allowedOrigins = ['http://localhost:3005', 'http://localhost:5173'];
-  if (process.env.FRONTEND_URL) allowedOrigins.push(process.env.FRONTEND_URL);
-  app.enableCors({ origin: allowedOrigins, credentials: true });
+  const allowedOrigins = [
+      'http://localhost:3005',
+      'http://localhost:5173',
+      'https://cleanhaus.ca',
+      'https://www.cleanhaus.ca'
+  ];
+
+  app.enableCors({
+    origin: allowedOrigins,
+    methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true,
+  });
 
   app.setGlobalPrefix('api');
 
