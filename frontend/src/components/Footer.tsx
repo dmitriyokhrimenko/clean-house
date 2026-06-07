@@ -134,12 +134,7 @@ export default function Footer() {
           <p className="text-slate-500 text-sm">
             © {new Date().getFullYear()} {settings?.businessName ?? 'Clean House'}. All rights reserved.
           </p>
-          <div className="flex items-center gap-4">
-            <p className="text-slate-600 text-sm">Made with ❤️ in Calgary</p>
-            <Link to="/admin" className="text-slate-700 hover:text-slate-400 text-xs transition-colors">
-              Admin
-            </Link>
-          </div>
+          <p className="text-slate-600 text-sm">Made with ❤️ in Calgary</p>
         </div>
       </div>
     </footer>

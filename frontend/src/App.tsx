@@ -5,6 +5,7 @@ import AboutPage from './pages/AboutPage';
 import GalleryPage from './pages/GalleryPage';
 import BookingPage from './pages/BookingPage';
 import AdminPage from './pages/AdminPage';
+import NotFoundPage from './pages/NotFoundPage';
 
 export default function App() {
   return (
@@ -15,6 +16,7 @@ export default function App() {
       <Route path="/gallery" element={<GalleryPage />} />
       <Route path="/booking" element={<BookingPage />} />
       <Route path="/admin/*" element={<AdminPage />} />
+      <Route path="*" element={<NotFoundPage />} />
     </Routes>
   );
 }

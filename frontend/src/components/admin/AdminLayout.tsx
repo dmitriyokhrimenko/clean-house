@@ -1,5 +1,5 @@
-import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, CalendarCheck, Images, Settings, LogOut, Sparkles } from 'lucide-react';
+import { NavLink, Link } from 'react-router-dom';
+import { LayoutDashboard, CalendarCheck, Images, Settings, LogOut, Sparkles, ExternalLink } from 'lucide-react';
 
 const navItems = [
   { to: '/admin', label: 'Dashboard', icon: LayoutDashboard, end: true },
@@ -41,8 +41,15 @@ export default function AdminLayout({ children, onLogout }: { children: React.Re
           ))}
         </nav>
 
-        {/* Logout */}
-        <div className="px-3 py-4 border-t border-slate-100">
+        {/* Bottom actions */}
+        <div className="px-3 py-4 border-t border-slate-100 flex flex-col gap-1">
+          <Link
+            to="/"
+            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors"
+          >
+            <ExternalLink className="w-4 h-4" />
+            View Website
+          </Link>
           <button
             onClick={onLogout}
             className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-600 hover:bg-red-50 hover:text-red-600 transition-colors w-full"
