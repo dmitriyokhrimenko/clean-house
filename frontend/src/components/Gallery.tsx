@@ -1,10 +1,12 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { X, ChevronLeft, ChevronRight, ImageOff, ZoomIn, ZoomOut } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, ImageOff, ZoomIn } from 'lucide-react';
 import { galleryApi } from '../services/api';
 import type { GalleryImage } from '../types';
 
 const API_BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:3001';
+const MIN_ZOOM = 1;
+const MAX_ZOOM = 4;
 
 interface Props {
   homeOnly?: boolean;
@@ -14,6 +16,11 @@ export default function Gallery({ homeOnly = false }: Props) {
   const [images, setImages] = useState<GalleryImage[]>([]);
   const [lightbox, setLightbox] = useState<number | null>(null);
   const [zoom, setZoom] = useState(1);
+  const [offset, setOffset] = useState({ x: 0, y: 0 });
+  const dragging = useRef(false);
+  const dragStart = useRef({ x: 0, y: 0 });
+  const offsetStart = useRef({ x: 0, y: 0 });
+  const imageContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     galleryApi.getAll(homeOnly ? { home: true } : undefined)
@@ -21,36 +28,81 @@ export default function Gallery({ homeOnly = false }: Props) {
       .catch(() => undefined);
   }, [homeOnly]);
 
-  const openLightbox = (idx: number) => { setLightbox(idx); setZoom(1); };
-  const closeLightbox = () => { setLightbox(null); setZoom(1); };
+  const resetZoom = () => { setZoom(1); setOffset({ x: 0, y: 0 }); };
+
+  const openLightbox = (idx: number) => { setLightbox(idx); resetZoom(); };
+  const closeLightbox = () => { setLightbox(null); resetZoom(); };
 
   const prev = useCallback(() => {
     setLightbox((i) => (i === null ? null : (i - 1 + images.length) % images.length));
-    setZoom(1);
+    resetZoom();
   }, [images.length]);
 
   const next = useCallback(() => {
     setLightbox((i) => (i === null ? null : (i + 1) % images.length));
-    setZoom(1);
+    resetZoom();
   }, [images.length]);
 
+  // Keyboard navigation
   useEffect(() => {
     if (lightbox === null) return;
     const handler = (e: KeyboardEvent) => {
       if (e.key === 'Escape') closeLightbox();
       if (e.key === 'ArrowLeft') prev();
       if (e.key === 'ArrowRight') next();
-      if (e.key === '+' || e.key === '=') setZoom((z) => Math.min(3, z + 0.5));
-      if (e.key === '-') setZoom((z) => Math.max(1, z - 0.5));
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
   }, [lightbox, prev, next]);
 
+  // Attach non-passive wheel listener so preventDefault actually works
+  useEffect(() => {
+    const el = imageContainerRef.current;
+    if (!el || lightbox === null) return;
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      setZoom((z) => {
+        const delta = e.deltaY < 0 ? 0.25 : -0.25;
+        const next = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, z + delta));
+        if (next === 1) setOffset({ x: 0, y: 0 });
+        return next;
+      });
+    };
+    el.addEventListener('wheel', onWheel, { passive: false });
+    return () => el.removeEventListener('wheel', onWheel);
+  }, [lightbox]);
+
+  // Double-click to toggle zoom
+  const handleDoubleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setZoom((z) => {
+      if (z > 1) { setOffset({ x: 0, y: 0 }); return 1; }
+      return 2;
+    });
+  };
+
+  // Drag-to-pan when zoomed in
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (zoom <= 1) return;
+    e.preventDefault();
+    dragging.current = true;
+    dragStart.current = { x: e.clientX, y: e.clientY };
+    offsetStart.current = { ...offset };
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!dragging.current) return;
+    setOffset({
+      x: offsetStart.current.x + (e.clientX - dragStart.current.x),
+      y: offsetStart.current.y + (e.clientY - dragStart.current.y),
+    });
+  };
+
+  const handleMouseUp = () => { dragging.current = false; };
+
   return (
     <section id="photos" className="bg-slate-50 py-20">
       <div className="max-w-6xl mx-auto px-4">
-        {/* Header */}
         <div className="text-center mb-12">
           <span className="inline-block bg-sky-100 text-sky-700 rounded-full px-4 py-1 text-sm font-medium mb-4">
             Our Work
@@ -94,7 +146,6 @@ export default function Gallery({ homeOnly = false }: Props) {
           </div>
         )}
 
-        {/* CTA */}
         <div className="flex justify-center gap-4">
           {homeOnly && images.length > 0 && (
             <Link
@@ -116,33 +167,12 @@ export default function Gallery({ homeOnly = false }: Props) {
       {/* Lightbox */}
       {lightbox !== null && (
         <div
-          className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center"
+          className="fixed inset-0 z-50 bg-black/92 flex items-center justify-center"
           onClick={closeLightbox}
         >
-          {/* Top bar */}
-          <div className="absolute top-4 left-1/2 -translate-x-1/2 flex items-center gap-3 bg-black/40 rounded-full px-4 py-2">
-            <button
-              onClick={(e) => { e.stopPropagation(); setZoom((z) => Math.max(1, z - 0.5)); }}
-              disabled={zoom <= 1}
-              className="text-white/70 hover:text-white disabled:opacity-30 transition-colors"
-              title="Zoom out (−)"
-            >
-              <ZoomOut className="w-5 h-5" />
-            </button>
-            <span className="text-white/60 text-xs w-10 text-center">{Math.round(zoom * 100)}%</span>
-            <button
-              onClick={(e) => { e.stopPropagation(); setZoom((z) => Math.min(3, z + 0.5)); }}
-              disabled={zoom >= 3}
-              className="text-white/70 hover:text-white disabled:opacity-30 transition-colors"
-              title="Zoom in (+)"
-            >
-              <ZoomIn className="w-5 h-5" />
-            </button>
-          </div>
-
           {/* Close */}
           <button
-            className="absolute top-4 right-4 text-white/70 hover:text-white transition-colors"
+            className="absolute top-4 right-4 text-white/70 hover:text-white transition-colors z-10"
             onClick={closeLightbox}
           >
             <X className="w-7 h-7" />
@@ -151,36 +181,63 @@ export default function Gallery({ homeOnly = false }: Props) {
           {/* Prev */}
           {images.length > 1 && (
             <button
-              className="absolute left-4 text-white/70 hover:text-white transition-colors p-2"
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-white/70 hover:text-white transition-colors p-2 z-10"
               onClick={(e) => { e.stopPropagation(); prev(); }}
             >
               <ChevronLeft className="w-8 h-8" />
             </button>
           )}
 
-          {/* Image */}
+          {/* Image container */}
           <div
-            className="max-w-4xl max-h-[85vh] mx-16 overflow-auto"
+            ref={imageContainerRef}
+            className="relative mx-16 flex items-center justify-center"
             onClick={(e) => e.stopPropagation()}
-            style={{ cursor: zoom > 1 ? 'move' : 'default' }}
+            onDoubleClick={handleDoubleClick}
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+            onMouseLeave={handleMouseUp}
+            style={{ cursor: zoom > 1 ? (dragging.current ? 'grabbing' : 'grab') : 'zoom-in' }}
           >
             <img
               src={`${API_BASE}${images[lightbox].url}`}
               alt={images[lightbox].caption ?? 'Gallery image'}
-              className="max-w-full max-h-[80vh] object-contain rounded-lg transition-transform duration-200"
-              style={{ transform: `scale(${zoom})`, transformOrigin: 'center center' }}
               draggable={false}
+              className="max-w-[80vw] max-h-[82vh] object-contain rounded-lg select-none"
+              style={{
+                transform: `scale(${zoom}) translate(${offset.x / zoom}px, ${offset.y / zoom}px)`,
+                transition: dragging.current ? 'none' : 'transform 0.15s ease',
+              }}
             />
-            {images[lightbox].caption && (
-              <p className="text-white/70 text-sm text-center mt-3">{images[lightbox].caption}</p>
+
+            {/* Zoom badge — visible only when zoomed */}
+            {zoom > 1 && (
+              <span className="absolute bottom-3 right-3 bg-black/50 text-white text-xs px-2 py-1 rounded-full pointer-events-none">
+                {Math.round(zoom * 100)}%
+              </span>
             )}
-            <p className="text-white/40 text-xs text-center mt-1">{lightbox + 1} / {images.length}</p>
+
+            {/* Hint — visible only at 1x */}
+            {zoom === 1 && (
+              <span className="absolute bottom-3 right-3 bg-black/40 text-white/60 text-xs px-2 py-1 rounded-full pointer-events-none">
+                scroll or double-click to zoom
+              </span>
+            )}
+          </div>
+
+          {/* Caption + counter */}
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-center pointer-events-none">
+            {images[lightbox].caption && (
+              <p className="text-white/70 text-sm mb-1">{images[lightbox].caption}</p>
+            )}
+            <p className="text-white/40 text-xs">{lightbox + 1} / {images.length}</p>
           </div>
 
           {/* Next */}
           {images.length > 1 && (
             <button
-              className="absolute right-4 text-white/70 hover:text-white transition-colors p-2"
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-white/70 hover:text-white transition-colors p-2 z-10"
               onClick={(e) => { e.stopPropagation(); next(); }}
             >
               <ChevronRight className="w-8 h-8" />
