@@ -43,13 +43,15 @@ export default function AdminLayout({ children, onLogout }: { children: React.Re
 
         {/* Bottom actions */}
         <div className="px-3 py-4 border-t border-slate-100 flex flex-col gap-1">
-          <Link
-            to="/"
+          <a
+            href="/"
+            target="_blank"
+            rel="noopener noreferrer"
             className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors"
           >
             <ExternalLink className="w-4 h-4" />
             View Website
-          </Link>
+          </a>
           <button
             onClick={onLogout}
             className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-600 hover:bg-red-50 hover:text-red-600 transition-colors w-full"
