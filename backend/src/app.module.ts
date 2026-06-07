@@ -10,6 +10,7 @@ import { UploadModule } from './modules/upload/upload.module';
 import { SeedModule } from './database/seed.module';
 import { SettingsModule } from './modules/settings/settings.module';
 import { GalleryModule } from './modules/gallery/gallery.module';
+import { AnalyticsModule } from './modules/analytics/analytics.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { GalleryModule } from './modules/gallery/gallery.module';
     SeedModule,
     SettingsModule,
     GalleryModule,
+    AnalyticsModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })

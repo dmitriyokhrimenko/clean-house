@@ -1,4 +1,4 @@
-import type { Booking, BookingsResponse, LoginResponse, BookingFormData, AppSettings, BookingStats, GalleryImage } from '../types';
+import type { Booking, BookingsResponse, LoginResponse, BookingFormData, AppSettings, BookingStats, GalleryImage, VisitorStats } from '../types';
 
 const BASE = `${import.meta.env.VITE_API_URL ?? 'http://localhost:3001'}/api`;
 
@@ -97,6 +97,12 @@ export const settingsApi = {
 
 export const statsApi = {
   get: () => get<BookingStats>('/bookings/stats'),
+};
+
+export const analyticsApi = {
+  trackPageview: (path: string, sessionId: string) =>
+    post<void>('/analytics/pageview', { path, sessionId, referrer: document.referrer || undefined }),
+  getStats: () => get<VisitorStats>('/analytics/stats'),
 };
 
 export const galleryApi = {

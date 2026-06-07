@@ -1,4 +1,5 @@
 import { Routes, Route } from 'react-router-dom';
+import { usePageView } from './hooks/usePageView';
 import Home from './pages/Home';
 import ServicesPage from './pages/ServicesPage';
 import AboutPage from './pages/AboutPage';
@@ -8,6 +9,7 @@ import AdminPage from './pages/AdminPage';
 import NotFoundPage from './pages/NotFoundPage';
 
 export default function App() {
+  usePageView();
   return (
     <Routes>
       <Route path="/" element={<Home />} />

@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { CalendarCheck, TrendingUp, Clock, CheckCircle } from 'lucide-react';
-import { statsApi } from '../../services/api';
-import type { BookingStats, BookingStatus } from '../../types';
+import { CalendarCheck, TrendingUp, Clock, CheckCircle, Users, Eye } from 'lucide-react';
+import { statsApi, analyticsApi } from '../../services/api';
+import type { BookingStats, BookingStatus, VisitorStats } from '../../types';
 
 const statusColors: Record<BookingStatus, string> = {
   new: 'bg-blue-100 text-blue-700',
@@ -14,11 +14,12 @@ const statusColors: Record<BookingStatus, string> = {
 
 export default function Dashboard() {
   const [stats, setStats] = useState<BookingStats | null>(null);
+  const [visitors, setVisitors] = useState<VisitorStats | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    statsApi.get()
-      .then(setStats)
+    Promise.all([statsApi.get(), analyticsApi.getStats()])
+      .then(([s, v]) => { setStats(s); setVisitors(v); })
       .finally(() => setLoading(false));
   }, []);
 
@@ -55,6 +56,50 @@ export default function Dashboard() {
             <div className="text-sm text-slate-500 mt-0.5">{label}</div>
           </div>
         ))}
+      </div>
+
+      {/* Visitor stats */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        {[
+          { label: 'Unique Visitors', value: visitors?.total ?? 0, icon: Users, color: 'text-violet-600', bg: 'bg-violet-50' },
+          { label: 'Today', value: visitors?.today ?? 0, icon: Eye, color: 'text-sky-600', bg: 'bg-sky-50' },
+          { label: 'This Week', value: visitors?.thisWeek ?? 0, icon: TrendingUp, color: 'text-teal-600', bg: 'bg-teal-50' },
+          { label: 'This Month', value: visitors?.thisMonth ?? 0, icon: Clock, color: 'text-indigo-600', bg: 'bg-indigo-50' },
+        ].map(({ label, value, icon: Icon, color, bg }) => (
+          <div key={label} className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100">
+            <div className={`w-10 h-10 ${bg} rounded-xl flex items-center justify-center mb-3`}>
+              <Icon className={`w-5 h-5 ${color}`} />
+            </div>
+            <div className="text-2xl font-bold text-slate-900">{value}</div>
+            <div className="text-sm text-slate-500 mt-0.5">{label}</div>
+          </div>
+        ))}
+      </div>
+
+      <div className="grid lg:grid-cols-3 gap-6 mb-6">
+        {/* Top pages */}
+        <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 lg:col-span-3">
+          <h2 className="font-semibold text-slate-900 mb-4">Top Pages</h2>
+          {!visitors?.topPages?.length ? (
+            <p className="text-slate-400 text-sm">No visits recorded yet.</p>
+          ) : (
+            <div className="flex flex-col gap-2">
+              {visitors.topPages.map(({ path, count }) => {
+                const max = parseInt(visitors.topPages[0].count);
+                const pct = Math.round((parseInt(count) / max) * 100);
+                return (
+                  <div key={path} className="flex items-center gap-3">
+                    <span className="text-xs font-mono text-slate-500 w-32 truncate">{path}</span>
+                    <div className="flex-1 bg-slate-100 rounded-full h-2">
+                      <div className="bg-violet-400 h-2 rounded-full" style={{ width: `${pct}%` }} />
+                    </div>
+                    <span className="text-sm text-slate-600 w-8 text-right">{count}</span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="grid lg:grid-cols-2 gap-6">

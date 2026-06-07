@@ -81,6 +81,15 @@ export interface GalleryImage {
   createdAt: string;
 }
 
+export interface VisitorStats {
+  total: number;
+  today: number;
+  thisWeek: number;
+  thisMonth: number;
+  topPages: { path: string; count: string }[];
+  recentVisits: { id: string; path: string; referrer: string | null; createdAt: string }[];
+}
+
 export interface BookingStats {
   total: number;
   byStatus: { status: string; count: string }[];
