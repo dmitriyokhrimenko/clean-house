@@ -21,7 +21,7 @@ const services: ServiceCard[] = [
     title: 'Deep Cleaning',
     description:
       'Thorough top-to-bottom cleaning for when you need a truly spotless home. Great for spring cleaning.',
-    price: 'From $60/hr',
+    price: 'From $50/hr',
   },
   {
     icon: <Package className="w-6 h-6 text-sky-600" />,
